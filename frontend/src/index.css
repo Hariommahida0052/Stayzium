@@ -1,0 +1,139 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background text-gray-900 font-sans antialiased;
+  }
+
+  /* Global Input Improvements */
+  input[type="text"],
+  input[type="password"],
+  input[type="email"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="date"],
+  select,
+  textarea {
+    @apply w-full text-base rounded-xl border-2 border-gray-200 bg-gray-50/50 transition-all duration-200 shadow-sm hover:border-gray-300 outline-none !important;
+    min-height: 3.25rem !important;
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+  }
+
+  /* Protect icon padding */
+  input:not(.pl-10):not(.pl-12):not(.pl-8) {
+    padding-left: 1rem !important;
+  }
+  
+  input:not(.pr-10):not(.pr-12):not(.pr-8) {
+    padding-right: 1rem !important;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    background-color: #ffffff !important;
+    border-color: #2962ff !important;
+    --tw-ring-color: rgba(41, 98, 255, 0.15) !important;
+    box-shadow: 0 0 0 4px rgba(41, 98, 255, 0.15) !important;
+  }
+     
+  /* Reset for checkbox and radio to prevent them from becoming giant blocks */
+  input[type="checkbox"],
+  input[type="radio"] {
+    @apply w-4 h-4 p-0 border-gray-300 rounded cursor-pointer !important;
+    min-height: 1rem !important;
+  }
+  input[type="checkbox"]:focus,
+  input[type="radio"]:focus {
+    box-shadow: 0 0 0 2px rgba(41, 98, 255, 0.2) !important;
+  }
+}
+
+/* React DatePicker Custom Modern Styling */
+.react-datepicker {
+  @apply font-sans border border-gray-200 shadow-xl rounded-2xl overflow-hidden !important;
+  display: flex !important;
+  flex-direction: row !important;
+  width: max-content !important;
+}
+
+.react-datepicker__header {
+  @apply bg-white border-b border-gray-100 pt-4 pb-2 !important;
+}
+
+.react-datepicker__current-month {
+  @apply text-gray-900 font-bold text-lg mb-2 !important;
+}
+
+.react-datepicker__day-names {
+  @apply mt-2 !important;
+}
+
+.react-datepicker__day-name {
+  @apply text-gray-400 font-medium text-xs uppercase w-9 !important;
+}
+
+.react-datepicker__day {
+  @apply w-9 h-9 leading-9 rounded-full text-sm text-gray-700 hover:bg-gray-100 transition-colors m-1 !important;
+}
+
+.react-datepicker__day--selected, 
+.react-datepicker__day--in-selecting-range, 
+.react-datepicker__day--in-range {
+  @apply bg-[#2962ff] text-white hover:bg-blue-700 font-bold shadow-md !important;
+}
+
+.react-datepicker__day--keyboard-selected {
+  @apply bg-[#2962ff]/20 text-[#2962ff] !important;
+}
+
+.react-datepicker__day--disabled {
+  @apply text-gray-300 hover:bg-transparent cursor-not-allowed !important;
+}
+
+.react-datepicker__time-container {
+  @apply border-l border-gray-100 w-28 !important;
+}
+
+.react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box ul.react-datepicker__time-list li.react-datepicker__time-list-item {
+  @apply h-10 leading-10 text-sm text-gray-600 hover:bg-gray-50 transition-colors m-1 rounded-lg flex items-center justify-center !important;
+  padding: 0 !important;
+}
+
+.react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box ul.react-datepicker__time-list li.react-datepicker__time-list-item--selected {
+  @apply bg-[#2962ff] text-white font-bold shadow-md !important;
+}
+
+.react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box {
+  width: 100% !important;
+}
+
+.react-datepicker-popper[data-placement^=bottom] .react-datepicker__triangle {
+  @apply fill-white text-white !important;
+}
+
+/* Fix overlapping and ensure it stays on top */
+.react-datepicker-popper {
+  z-index: 9999 !important;
+}
+
+/* Mobile Responsiveness for DatePicker with Time */
+@media (max-width: 480px) {
+  .react-datepicker {
+    @apply flex flex-col max-w-[90vw] !important;
+  }
+  .react-datepicker__time-container {
+    @apply w-full border-l-0 border-t border-gray-100 !important;
+  }
+  .react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box {
+    @apply w-full h-auto max-h-40 !important;
+  }
+  .react-datepicker__time-list {
+    @apply flex flex-row flex-wrap justify-center overflow-y-auto !important;
+    padding: 8px 0 !important;
+  }
+  .react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box ul.react-datepicker__time-list li.react-datepicker__time-list-item {
+    @apply w-auto px-4 !important;
+  }
+}

@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 
 import userService from '../../services/userService';
 import uploadService from '../../services/uploadService';
+import analyticsService from '../../services/analyticsService';
 
 const AdminProfile = () => {
 
@@ -28,11 +29,47 @@ const AdminProfile = () => {
     confirmPassword: ''
   });
 
+  const [systemStats, setSystemStats] = useState({ totalUsers: 0, revenue: 0, status: 'Checking...' });
+  const [recentLogs, setRecentLogs] = useState([]);
+
   const fileInputRef = useRef(null);
 
   useEffect(() => {
     fetchProfile();
+    fetchSystemData();
   }, []);
+
+  const fetchSystemData = async () => {
+    try {
+      const [summaryRes, healthRes] = await Promise.all([
+        analyticsService.getAdminSummary(),
+        analyticsService.getSystemHealth()
+      ]);
+      
+      let users = 0;
+      let rev = 0;
+      let logs = [];
+      if (summaryRes?.data?.success) {
+        users = summaryRes.data.data.totalUsers || 0;
+        rev = summaryRes.data.data.platformRevenue || 0;
+        logs = summaryRes.data.data.recentActivity || [];
+      }
+      
+      let status = 'Healthy';
+      if (healthRes?.data?.success) {
+        const { databaseStatus, errorRate } = healthRes.data.data;
+        if (databaseStatus !== 'Operational' || parseFloat(errorRate) > 5) {
+          status = 'Degraded';
+        }
+      }
+
+      setSystemStats({ totalUsers: users, revenue: rev, status });
+      setRecentLogs(logs);
+    } catch (err) {
+      console.error('Error fetching system data', err);
+      setSystemStats(prev => ({ ...prev, status: 'Error' }));
+    }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -306,12 +343,12 @@ const AdminProfile = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 bg-blue-50 rounded-xl text-center">
                 <Users className="w-6 h-6 text-blue-600 mx-auto mb-2" />
-                <p className="text-2xl font-bold text-gray-900">0</p>
+                <p className="text-2xl font-bold text-gray-900">{systemStats.totalUsers.toLocaleString()}</p>
                 <p className="text-xs text-gray-600 font-medium uppercase mt-1">Total Users</p>
               </div>
               <div className="p-4 bg-emerald-50 rounded-xl text-center">
                 <DollarSign className="w-6 h-6 text-emerald-600 mx-auto mb-2" />
-                <p className="text-2xl font-bold text-gray-900">$0</p>
+                <p className="text-2xl font-bold text-gray-900">₹{systemStats.revenue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                 <p className="text-xs text-gray-600 font-medium uppercase mt-1">Revenue</p>
               </div>
             </div>
@@ -320,9 +357,9 @@ const AdminProfile = () => {
                 <Server className="w-5 h-5 text-indigo-600" />
                 <span className="text-sm font-medium text-gray-900">System Status</span>
               </div>
-              <span className="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                Healthy
+              <span className={`inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-xs font-medium ${systemStats.status === 'Healthy' ? 'bg-emerald-100 text-emerald-700' : systemStats.status === 'Error' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${systemStats.status === 'Healthy' ? 'bg-emerald-500' : systemStats.status === 'Error' ? 'bg-red-500' : 'bg-yellow-500'}`}></span>
+                {systemStats.status}
               </span>
             </div>
           </div>
@@ -333,28 +370,22 @@ const AdminProfile = () => {
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-shadow duration-300">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b border-gray-100 pb-2">Recent Logs</h3>
             <div className="space-y-4 relative before:absolute before:inset-0 before:ml-3.5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-gray-200 before:to-transparent">
-              <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                <div className="flex items-center justify-center w-7 h-7 rounded-full border border-white bg-indigo-100 text-indigo-600 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm z-10">
-                  <FileText className="w-3 h-3" />
-                </div>
-                <div className="w-[calc(100%-3rem)] md:w-[calc(50%-2rem)] bg-gray-50 p-3 rounded-lg border border-gray-100 shadow-sm ml-4 md:ml-0">
-                  <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-gray-900">System Backup</span>
-                    <span className="text-xs text-gray-500">Yesterday</span>
+              {recentLogs.length > 0 ? recentLogs.slice(0, 5).map((log, index) => (
+                <div key={log._id || index} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                  <div className={`flex items-center justify-center w-7 h-7 rounded-full border border-white shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm z-10 ${index % 2 === 0 ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-500'}`}>
+                    {index % 2 === 0 ? <FileText className="w-3 h-3" /> : <User className="w-3 h-3" />}
+                  </div>
+                  <div className="w-[calc(100%-3rem)] md:w-[calc(50%-2rem)] bg-gray-50 p-3 rounded-lg border border-gray-100 shadow-sm ml-4 md:ml-0 relative z-20">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold text-gray-900">{log.title}</span>
+                      {log.description && <span className="text-xs text-gray-600 mt-0.5">{log.description}</span>}
+                      <span className="text-xs text-gray-500 mt-1">{log.time}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                <div className="flex items-center justify-center w-7 h-7 rounded-full border border-white bg-gray-100 text-gray-500 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm z-10">
-                  <User className="w-3 h-3" />
-                </div>
-                <div className="w-[calc(100%-3rem)] md:w-[calc(50%-2rem)] bg-gray-50 p-3 rounded-lg border border-gray-100 shadow-sm ml-4 md:ml-0">
-                  <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-gray-900">Admin Login</span>
-                    <span className="text-xs text-gray-500">2 days ago</span>
-                  </div>
-                </div>
-              </div>
+              )) : (
+                 <div className="text-center text-gray-500 text-sm py-4 relative z-20">No recent activity</div>
+              )}
             </div>
           </div>
 

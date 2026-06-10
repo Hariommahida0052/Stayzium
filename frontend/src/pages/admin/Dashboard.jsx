@@ -131,13 +131,14 @@ const AdminDashboard = () => {
                 <LineChart data={chartData} margin={{ top: 10, right: 10, left: 20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} tickFormatter={(val) => `₹${val.toLocaleString('en-IN')}`} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} tickFormatter={(val) => val.toLocaleString('en-IN')} />
                   <RechartsTooltip 
-                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                    formatter={(value) => [`₹${Number(value).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 'Revenue']}
-                    labelStyle={{ color: '#64748b', marginBottom: '4px' }}
+                    contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', backgroundColor: 'rgba(255, 255, 255, 0.95)' }}
+                    formatter={(value) => [Number(value).toLocaleString('en-IN'), 'Bookings']}
+                    labelStyle={{ color: '#64748b', marginBottom: '4px', fontWeight: '500' }}
+                    itemStyle={{ color: '#4f46e5', fontWeight: 'bold' }}
                   />
-                  <Line type="monotone" dataKey="revenue" stroke="#4f46e5" strokeWidth={3} dot={{ r: 4, fill: '#4f46e5', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} />
+                  <Line type="monotone" dataKey="bookings" stroke="#4f46e5" strokeWidth={3} dot={{ r: 4, fill: '#4f46e5', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6, stroke: '#818cf8', strokeWidth: 4 }} animationDuration={1500} />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
@@ -154,39 +155,58 @@ const AdminDashboard = () => {
           <div className="p-6 flex-1 flex flex-col justify-center relative">
             {analytics.revenueSources && analytics.revenueSources.length > 0 && analytics.revenueSources.some(s => s.value > 0) ? (
               <>
-                <div className="h-[250px] w-full">
+                <div className="h-[280px] w-full relative">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
+                      <defs>
+                        <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                          <feDropShadow dx="0" dy="4" stdDeviation="6" floodOpacity="0.15" />
+                        </filter>
+                      </defs>
                       <Pie
                         data={analytics.revenueSources.filter(s => s.value > 0)}
                         cx="50%"
                         cy="50%"
-                        innerRadius={70}
-                        outerRadius={100}
-                        paddingAngle={2}
+                        innerRadius={75}
+                        outerRadius={105}
+                        paddingAngle={6}
+                        cornerRadius={8}
                         dataKey="value"
                         stroke="none"
+                        filter="url(#shadow)"
+                        animationDuration={1500}
                       >
                         {analytics.revenueSources.filter(s => s.value > 0).map((entry, index) => {
-                          const COLORS = ['#4f46e5', '#10b981', '#0ea5e9'];
-                          return <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />;
+                          const COLORS = ['#4f46e5', '#10b981', '#0ea5e9', '#f59e0b', '#ec4899'];
+                          return <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} className="hover:opacity-80 transition-opacity duration-300 cursor-pointer" />;
                         })}
                       </Pie>
                       <RechartsTooltip 
-                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                        contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.1)', backgroundColor: 'rgba(255, 255, 255, 0.95)', padding: '12px' }}
                         formatter={(value) => [`₹${Number(value).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 'Revenue']}
-                        labelStyle={{ display: 'none' }}
+                        itemStyle={{ fontWeight: 'bold', color: '#1e293b' }}
                       />
                     </PieChart>
                   </ResponsiveContainer>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span className="text-gray-400 text-xs font-medium uppercase tracking-wider">Total</span>
+                    <span className="text-xl font-bold text-gray-800">
+                      ₹{analytics.revenueSources.reduce((acc, curr) => acc + curr.value, 0).toLocaleString('en-IN', { notation: 'compact', maximumFractionDigits: 1 })}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex justify-center gap-4 mt-4">
+                <div className="flex flex-wrap justify-center gap-3 mt-6">
                   {analytics.revenueSources.filter(s => s.value > 0).map((entry, index) => {
-                     const COLORS = ['#4f46e5', '#10b981', '#0ea5e9'];
+                     const COLORS = ['#4f46e5', '#10b981', '#0ea5e9', '#f59e0b', '#ec4899'];
+                     const total = analytics.revenueSources.reduce((acc, curr) => acc + curr.value, 0);
+                     const percentage = total > 0 ? Math.round((entry.value / total) * 100) : 0;
                      return (
-                      <div key={index} className="flex items-center text-sm text-gray-600">
-                        <span className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: COLORS[index % COLORS.length] }}></span>
-                        {entry.name}
+                      <div key={index} className="flex items-center px-3 py-1.5 bg-gray-50 rounded-xl border border-gray-100 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5">
+                        <span className="w-3 h-3 rounded-full mr-2 shadow-sm" style={{ backgroundColor: COLORS[index % COLORS.length] }}></span>
+                        <span className="text-sm font-medium text-gray-700">{entry.name}</span>
+                        <span className="ml-2 text-xs font-bold text-gray-500 bg-white px-1.5 py-0.5 rounded-md border border-gray-100">
+                          {percentage}%
+                        </span>
                       </div>
                      )
                   })}

@@ -1,58 +1,61 @@
-const nodemailer = require('nodemailer');
-
 const sendEmail = async (options) => {
-  let transporter;
-
-  // Use real credentials if provided in .env, otherwise use Ethereal (dummy) for testing
-  if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-    transporter = nodemailer.createTransport({
-      service: 'gmail', // You can change this based on your provider
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
-    });
-  } else {
-    // Generate test SMTP service account from ethereal.email
-    let testAccount = await nodemailer.createTestAccount();
-    
-    transporter = nodemailer.createTransport({
-      host: "smtp.ethereal.email",
-      port: 587,
-      secure: false, // true for 465, false for other ports
-      auth: {
-        user: testAccount.user, // generated ethereal user
-        pass: testAccount.pass, // generated ethereal password
-      },
-    });
-    console.log("Using Ethereal for testing. Email credentials generated.");
+  if (!process.env.BREVO_API_KEY) {
+    console.warn("BREVO_API_KEY is not defined. Falling back to Mock Email Service.");
+    console.log('===================================================');
+    console.log(`[MOCK EMAIL SERVICE] Sending email to: ${options.email}`);
+    console.log(`[MOCK EMAIL SERVICE] Subject: ${options.subject}`);
+    console.log(`[MOCK EMAIL SERVICE] Message: \n${options.html}`);
+    console.log('===================================================');
+    return true;
   }
 
   const isBulk = options.email && options.email.includes(',');
-  const mailOptions = {
-    from: process.env.EMAIL_USER ? `"Stayzium Admin" <${process.env.EMAIL_USER}>` : '"Stayzium Admin" <noreply@stayzium.com>',
-    to: isBulk ? 'noreply@hotelbooking.com' : options.email,
-    bcc: isBulk ? options.email : undefined,
+  const toEmails = isBulk 
+    ? [{ email: 'noreply@stayzium.com', name: 'Subscribers' }] 
+    : [{ email: options.email }];
+  
+  const bccEmails = isBulk 
+    ? options.email.split(',').map(e => ({ email: e.trim() })) 
+    : undefined;
+
+  const payload = {
+    sender: { 
+      email: process.env.EMAIL_USER || 'hetmahida353@gmail.com', 
+      name: 'Stayzium Admin' 
+    },
+    to: toEmails,
     subject: options.subject,
-    html: options.html,
+    htmlContent: options.html
   };
 
+  if (bccEmails && bccEmails.length > 0) {
+    payload.bcc = bccEmails;
+  }
+
   try {
-    const info = await transporter.sendMail(mailOptions);
-    
-    if (!process.env.EMAIL_USER) {
-      console.log("Message sent: %s", info.messageId);
-      console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'accept': 'application/json',
+        'api-key': process.env.BREVO_API_KEY,
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(`Brevo API Error: ${JSON.stringify(data)}`);
     }
 
-    return info;
+    console.log("Email sent successfully via Brevo:", data.messageId);
+    return data;
   } catch (error) {
-    console.error("Failed to send email via SMTP:", error.message);
-    console.log("Falling back to Mock Email Service due to SMTP restrictions (e.g., Render free tier blocks ports 465/587)");
+    console.error("Failed to send email via Brevo API:", error.message);
     console.log('===================================================');
-    console.log(`[MOCK EMAIL SERVICE] Sending email to: ${mailOptions.to}`);
-    console.log(`[MOCK EMAIL SERVICE] Subject: ${mailOptions.subject}`);
-    console.log(`[MOCK EMAIL SERVICE] Message: \n${mailOptions.html}`);
+    console.log(`[MOCK EMAIL SERVICE] Sending email to: ${options.email}`);
+    console.log(`[MOCK EMAIL SERVICE] Subject: ${options.subject}`);
     console.log('===================================================');
     return true;
   }

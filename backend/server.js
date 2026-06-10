@@ -60,8 +60,7 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/payouts', payoutRoutes);
 
-// Make uploads folder static
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Static local uploads route removed (using Cloudinary)
 
 // Basic Route for testing
 app.get('/api', (req, res) => {

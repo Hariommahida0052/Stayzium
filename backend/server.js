@@ -96,6 +96,7 @@ app.use((err, req, res, next) => {
 });
 
 const http = require('http');
+const https = require('https');
 const { initSocket } = require('./utils/socket');
 
 const PORT = process.env.PORT || 5000;
@@ -105,5 +106,15 @@ const server = http.createServer(app);
 initSocket(server);
 
 server.listen(PORT, () => {
-  console.log(`Server is running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+  console.log(`Server is running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+  
+  // Keep-alive ping to prevent Render from sleeping
+  const pingUrl = 'https://stayzium-api.onrender.com/api';
+  setInterval(() => {
+    https.get(pingUrl, (res) => {
+      console.log(`[Keep-Alive] Pinged ${pingUrl} - Status: ${res.statusCode}`);
+    }).on('error', (err) => {
+      console.log(`[Keep-Alive] Ping failed: ${err.message}`);
+    });
+  }, 10 * 60 * 1000); // 10 minutes
 });

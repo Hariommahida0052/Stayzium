@@ -421,7 +421,7 @@ const OwnerRooms = () => {
                     {newRoom.images.map((img, index) => (
                       <div key={index} className="relative group w-20 h-20">
                         <img 
-                          src={img.startsWith('http') ? img : `http://localhost:5000${img}`} 
+                          src={img.startsWith('http') ? img : `${process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL.replace('/api', '') : 'http://localhost:5000'}${img}`} 
                           alt={`Room ${index}`} 
                           className="w-full h-full object-cover rounded-lg border border-gray-200 shadow-sm" 
                           crossOrigin="anonymous" 

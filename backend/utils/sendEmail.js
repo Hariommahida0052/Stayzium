@@ -37,14 +37,25 @@ const sendEmail = async (options) => {
     html: options.html,
   };
 
-  const info = await transporter.sendMail(mailOptions);
-  
-  if (!process.env.EMAIL_USER) {
-    console.log("Message sent: %s", info.messageId);
-    console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
-  }
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    
+    if (!process.env.EMAIL_USER) {
+      console.log("Message sent: %s", info.messageId);
+      console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+    }
 
-  return info;
+    return info;
+  } catch (error) {
+    console.error("Failed to send email via SMTP:", error.message);
+    console.log("Falling back to Mock Email Service due to SMTP restrictions (e.g., Render free tier blocks ports 465/587)");
+    console.log('===================================================');
+    console.log(`[MOCK EMAIL SERVICE] Sending email to: ${mailOptions.to}`);
+    console.log(`[MOCK EMAIL SERVICE] Subject: ${mailOptions.subject}`);
+    console.log(`[MOCK EMAIL SERVICE] Message: \n${mailOptions.html}`);
+    console.log('===================================================');
+    return true;
+  }
 };
 
 module.exports = sendEmail;

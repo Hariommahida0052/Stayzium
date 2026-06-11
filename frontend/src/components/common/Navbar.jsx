@@ -4,9 +4,11 @@ import { Menu, X, Globe, ChevronDown, Building, MapPin, Tag, LayoutDashboard, Us
 import { AuthContext } from '../../context/AuthContext';
 import { showConfirm } from '../../utils/toastUtils';
 import toast from 'react-hot-toast';
+import ImageLightbox from './ImageLightbox';
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isLogoOpen, setIsLogoOpen] = useState(false);
   const { user, logout } = useContext(AuthContext);
   const location = useLocation();
   const navigate = useNavigate();
@@ -36,9 +38,22 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <span className={`text-2xl font-bold tracking-tight ${logoClasses}`}>Stayzium</span>
-          </Link>
+          <div className="flex items-center space-x-3">
+            <button 
+              onClick={() => setIsLogoOpen(true)}
+              className="focus:outline-none flex-shrink-0"
+            >
+              <img 
+                src={process.env.PUBLIC_URL + '/logo.png'} 
+                alt="Logo" 
+                className="h-12 md:h-16 w-auto object-contain rounded-md shadow-sm hover:opacity-90 transition-opacity cursor-pointer" 
+                style={{ imageRendering: 'high-quality' }}
+              />
+            </button>
+            <Link to="/" className={`text-2xl font-bold tracking-tight ${logoClasses} hover:opacity-80 transition-opacity`}>
+              Stayzium
+            </Link>
+          </div>
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center space-x-8">
@@ -182,6 +197,14 @@ const Navbar = () => {
           )}
         </div>
       </div>
+
+      <ImageLightbox 
+        isOpen={isLogoOpen}
+        images={[process.env.PUBLIC_URL + '/logo.png']}
+        currentIndex={0}
+        onClose={() => setIsLogoOpen(false)}
+        title="Stayzium Logo"
+      />
     </nav>
   );
 };

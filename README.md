@@ -12,7 +12,7 @@
 ![MongoDB](https://img.shields.io/badge/MONGODB-ATLAS-47A248?style=flat-square&logo=mongodb&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/TAILWIND-CSS-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)
 
-**[🔗 Live Demo Website](YOUR_WEBSITE_LINK_HERE) | [💻 GitHub Repository](YOUR_GITHUB_REPO_LINK_HERE)**
+**[🔗 Live Demo Website](https://stayzium.vercel.app/) | [💻 GitHub Repository](https://github.com/Hariommahida0052/Stayzium)**
 
 </div>
 
@@ -292,8 +292,8 @@ REACT_APP_RAZORPAY_KEY_ID=your_razorpay_key_id
 Full Stack Developer (MERN Stack)  
 Intern at Vihil Infotech Private Limited, Gujarat
 
-- 📧 [hetmahida353@gmail.com](mailto:hetmahida353@gmail.com)
-- 🔗 [LinkedIn Profile](https://www.linkedin.com/in/hariom-mahida/)
+- 📧 [hetmahida353@gmail.com](mailto:hariommahida.svma@gmail.com)
+- 🔗 [LinkedIn Profile](https://www.linkedin.com/in/hariom-mahida-7ba67a382/)
 - 🐙 [GitHub Profile](https://github.com/Hariommahida0052)
 
 ---

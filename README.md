@@ -292,8 +292,8 @@ REACT_APP_RAZORPAY_KEY_ID=your_razorpay_key_id
 Full Stack Developer (MERN Stack)  
 Intern at Vihil Infotech Private Limited, Gujarat
 
-- 📧 [mail](mailto:hariommahida.svma@gmail.com)
-- 🔗 [LinkedIn Profile](https://www.linkedin.com/in/hariom-mahida-7ba67a382/)
+- 📧 (mailto:hariommahida.svma@gmail.com)
+- 🔗 (https://www.linkedin.com/in/hariom-mahida-7ba67a382/)
 - 🐙 [GitHub Profile](https://github.com/Hariommahida0052)
 
 ---

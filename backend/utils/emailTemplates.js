@@ -122,7 +122,7 @@ exports.getNewOfferTemplate = (offerName, discount, description, imageUrl) => {
     <p style="font-size: 15px; color: #6b7280; text-align: center; margin-bottom: 25px;">Don't miss out! Log in to Stayzium now to claim this offer before it expires.</p>
     
     <div style="text-align: center;">
-      <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/offers" class="btn" style="display: inline-block; background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 16px 36px; border-radius: 8px; font-weight: 700; font-size: 16px; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2); transition: all 0.2s;">Claim Offer Now</a>
+      <a href="${process.env.FRONTEND_URL || 'https://stayzium.vercel.app'}/offers" class="btn" style="display: inline-block; background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 16px 36px; border-radius: 8px; font-weight: 700; font-size: 16px; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2); transition: all 0.2s;">Claim Offer Now</a>
     </div>
   `;
   return getBaseTemplate(`Special Offer: ${offerName}`, content);
@@ -135,7 +135,7 @@ exports.getNewHotelTemplate = (hotelName, location) => {
     <h3>🏨 ${hotelName}</h3>
     <p>📍 Location: ${location}</p>
     <p>Discover our latest addition and book your next stay today!</p>
-    <center><a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/hotels" class="btn">Explore Properties</a></center>
+    <center><a href="${process.env.FRONTEND_URL || 'https://stayzium.vercel.app'}/hotels" class="btn">Explore Properties</a></center>
   `;
   return getBaseTemplate(`New Hotel: ${hotelName}`, content);
 };
@@ -145,7 +145,7 @@ exports.getNewRoomTemplate = (hotelName, roomType) => {
     <h2>New Rooms Available!</h2>
     <p>Great news! <strong>${hotelName}</strong> has just added new <strong>${roomType}</strong> rooms.</p>
     <p>If you're planning a trip, be sure to check out these brand new accommodations.</p>
-    <center><a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/hotels" class="btn">Book a Room</a></center>
+    <center><a href="${process.env.FRONTEND_URL || 'https://stayzium.vercel.app'}/hotels" class="btn">Book a Room</a></center>
   `;
   return getBaseTemplate(`New Rooms at ${hotelName}`, content);
 };

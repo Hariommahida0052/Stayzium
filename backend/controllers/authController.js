@@ -216,7 +216,8 @@ exports.forgotPassword = async (req, res, next) => {
     await user.save({ validateBeforeSave: false });
 
     // Create reset url
-    const resetUrl = `${req.protocol}://${req.get('host').replace('5000', '3000')}/reset-password/${resetToken}`;
+    const frontendUrl = process.env.FRONTEND_URL || 'https://stayzium.vercel.app';
+    const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
 
     const html = `
       <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #eaeaea;">

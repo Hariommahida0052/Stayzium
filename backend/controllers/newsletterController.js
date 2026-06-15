@@ -8,7 +8,7 @@ const generateNewsletterHTML = async (customSubject, customMessage) => {
   let hotelCardsHTML = '';
 
   const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+  const frontendUrl = process.env.FRONTEND_URL || 'https://stayzium.vercel.app';
 
   topHotels.forEach(hotel => {
     let imageUrl = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=400&q=80';
@@ -80,7 +80,7 @@ const generateNewsletterHTML = async (customSubject, customMessage) => {
                             <p style="margin: 0 0 25px 0; color: #4b5563; font-size: 16px; line-height: 26px;">
                                 ${customMessage || 'Thank you for subscribing to the Stayzium newsletter! You are now first in line to receive our exclusive hotel offers, secret travel updates, and massive seasonal discounts.'}
                             </p>
-                            <a href="http://localhost:3000" style="display: inline-block; background-color: #2962ff; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 16px; padding: 16px 36px; border-radius: 8px;">Explore Destinations</a>
+                            <a href="${frontendUrl}" style="display: inline-block; background-color: #2962ff; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 16px; padding: 16px 36px; border-radius: 8px;">Explore Destinations</a>
                         </td>
                     </tr>
 
@@ -99,9 +99,9 @@ const generateNewsletterHTML = async (customSubject, customMessage) => {
                             <h2 style="margin: 0 0 10px 0; color: #ffffff; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;">Stayzium</h2>
                             <p style="margin: 0 0 25px 0; font-size: 15px;">Your ultimate travel companion.</p>
                             <div style="margin-bottom: 20px;">
-                                <a href="http://localhost:3000/privacy" style="color: #ffffff; text-decoration: underline; margin: 0 10px; font-size: 14px;">Privacy Policy</a>
+                                <a href="${frontendUrl}/privacy" style="color: #ffffff; text-decoration: underline; margin: 0 10px; font-size: 14px;">Privacy Policy</a>
                                 <span style="color: #4b5563;">|</span>
-                                <a href="http://localhost:3000/terms" style="color: #ffffff; text-decoration: underline; margin: 0 10px; font-size: 14px;">Terms of Service</a>
+                                <a href="${frontendUrl}/terms" style="color: #ffffff; text-decoration: underline; margin: 0 10px; font-size: 14px;">Terms of Service</a>
                             </div>
                             <p style="margin: 0; font-size: 12px; color: #6b7280; line-height: 18px;">
                                 You are receiving this email because you opted in via our website.<br/>

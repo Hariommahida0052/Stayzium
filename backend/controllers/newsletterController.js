@@ -7,7 +7,7 @@ const generateNewsletterHTML = async (customSubject, customMessage) => {
   const topHotels = await Hotel.find().limit(2).sort('-rating');
   let hotelCardsHTML = '';
 
-  const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
+  const backendUrl = process.env.BACKEND_URL || 'https://stayzium-api.onrender.com';
   const frontendUrl = process.env.FRONTEND_URL || 'https://stayzium.vercel.app';
 
   topHotels.forEach(hotel => {

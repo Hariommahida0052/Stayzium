@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Globe, ChevronDown, Building, MapPin, Tag, LayoutDashboard, User as UserIcon, LogOut, LogIn, UserPlus } from 'lucide-react';
+import { Menu, X, Globe, ChevronDown, Building, MapPin, Tag, LayoutDashboard, User as UserIcon, LogOut, LogIn, UserPlus, CalendarCheck, Heart, Phone } from 'lucide-react';
 import { AuthContext } from '../../context/AuthContext';
 import { showConfirm } from '../../utils/toastUtils';
 import toast from 'react-hot-toast';
@@ -77,6 +77,12 @@ const Navbar = () => {
                 </button>
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right translate-y-2 group-hover:translate-y-0 border border-gray-100">
                   <Link to={`/${user.role}/dashboard`} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium">Dashboard</Link>
+                  {user.role === 'user' && (
+                    <>
+                      <Link to="/user/bookings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium">My Bookings</Link>
+                      <Link to="/user/wishlist" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium">Wishlist</Link>
+                    </>
+                  )}
                   <Link to={`/${user.role}/profile`} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium">My Profile</Link>
                   <div className="border-t border-gray-100 my-1"></div>
                   <button 
@@ -146,6 +152,9 @@ const Navbar = () => {
             <Link to="/offers" onClick={() => setMobileMenuOpen(false)} className="flex items-center px-4 py-3.5 text-gray-700 hover:bg-gray-50 hover:text-primary rounded-xl font-medium transition-colors">
               <Tag className="w-5 h-5 mr-3 text-gray-400" /> Offers
             </Link>
+            <Link to="/contact" onClick={() => setMobileMenuOpen(false)} className="flex items-center px-4 py-3.5 text-gray-700 hover:bg-gray-50 hover:text-primary rounded-xl font-medium transition-colors">
+              <Phone className="w-5 h-5 mr-3 text-gray-400" /> Contact
+            </Link>
           </div>
 
           <div className="px-6 py-2">
@@ -167,6 +176,16 @@ const Navbar = () => {
                 <Link to={`/${user.role}/dashboard`} onClick={() => setMobileMenuOpen(false)} className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-primary rounded-xl font-medium transition-colors">
                   <LayoutDashboard className="w-5 h-5 mr-3 text-gray-400" /> Dashboard
                 </Link>
+                {user.role === 'user' && (
+                  <>
+                    <Link to="/user/bookings" onClick={() => setMobileMenuOpen(false)} className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-primary rounded-xl font-medium transition-colors">
+                      <CalendarCheck className="w-5 h-5 mr-3 text-gray-400" /> My Bookings
+                    </Link>
+                    <Link to="/user/wishlist" onClick={() => setMobileMenuOpen(false)} className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-primary rounded-xl font-medium transition-colors">
+                      <Heart className="w-5 h-5 mr-3 text-gray-400" /> Wishlist
+                    </Link>
+                  </>
+                )}
                 <Link to={`/${user.role}/profile`} onClick={() => setMobileMenuOpen(false)} className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-primary rounded-xl font-medium transition-colors">
                   <UserIcon className="w-5 h-5 mr-3 text-gray-400" /> My Profile
                 </Link>

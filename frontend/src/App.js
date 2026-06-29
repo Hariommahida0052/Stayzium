@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
@@ -6,6 +6,7 @@ import { Toaster } from 'react-hot-toast';
 import UserLayout from './components/layout/UserLayout';
 import AdminLayout from './components/layout/AdminLayout';
 import OwnerLayout from './components/layout/OwnerLayout';
+import SplashLoader from './components/common/SplashLoader';
 
 // Public/Auth Pages
 import Login from './pages/auth/Login';
@@ -65,6 +66,12 @@ import AdminNewsletter from './pages/admin/Newsletter';
 import Maintenance from './pages/Maintenance';
 
 function App() {
+  const [showSplash, setShowSplash] = useState(true);
+
+  if (showSplash) {
+    return <SplashLoader onComplete={() => setShowSplash(false)} />;
+  }
+
   return (
     <AuthProvider>
       <SocketProvider>

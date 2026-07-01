@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Calendar, Users, Star, Shield, Clock, Heart, Mail, ChevronRight, Search, Building2, CreditCard, CheckCircle2, Plus, Minus, Bell } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useScroll, useTransform, useSpring } from 'framer-motion';
+import { MapPin, Calendar, Users, Star, Shield, Clock, Heart, Mail, ChevronRight, ChevronLeft, Search, Building2, CreditCard, CheckCircle2, Plus, Minus, Bell } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import hotelService from '../../services/hotelService';
 import newsletterService from '../../services/newsletterService';
@@ -14,7 +14,15 @@ import { format } from 'date-fns';
 
 const Home = () => {
   const navigate = useNavigate();
+  const heroRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"]
+  });
+  const smoothY = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
+  const heroY = useTransform(smoothY, [0, 1], ["0%", "20%"]);
   const [currentBg, setCurrentBg] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
   const [searchParams, setSearchParams] = useState({
     location: '',
     dates: '12 Aug - 18 Aug',
@@ -79,18 +87,27 @@ const Home = () => {
 
   const backgroundImages = [
     '/images/hero_bg.png',
-    'https://images.unsplash.com/photo-1542314831-c53cd3b82142?auto=format&fit=crop&w=1920&q=80',
-    'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?auto=format&fit=crop&w=1920&q=80',
-    'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=1920&q=80'
+    'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1920&q=80',
+    'https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=1920&q=80',
+    'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=1920&q=80'
   ];
 
-  // Rotate background images every 1.5 seconds
+  // Rotate background images every 5 seconds smoothly, pause on hover
   useEffect(() => {
+    if (isHovered) return;
     const interval = setInterval(() => {
       setCurrentBg((prev) => (prev + 1) % backgroundImages.length);
-    }, 1500);
+    }, 5000);
     return () => clearInterval(interval);
-  }, [backgroundImages.length]);
+  }, [backgroundImages.length, isHovered]);
+
+  const nextBg = () => {
+    setCurrentBg((prev) => (prev + 1) % backgroundImages.length);
+  };
+  
+  const prevBg = () => {
+    setCurrentBg((prev) => (prev === 0 ? backgroundImages.length - 1 : prev - 1));
+  };
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -110,14 +127,22 @@ const Home = () => {
   ];
 
   const [popularHotels, setPopularHotels] = useState([]);
+  const carouselRef = useRef(null);
+  const [carouselWidth, setCarouselWidth] = useState(0);
+
+  useEffect(() => {
+    if (carouselRef.current) {
+      setCarouselWidth(carouselRef.current.scrollWidth - carouselRef.current.offsetWidth);
+    }
+  }, [popularHotels]);
 
   useEffect(() => {
     const fetchHotels = async () => {
       try {
         const res = await hotelService.getAllHotels();
         if (res.data.success) {
-          // Take first 3 hotels as popular
-          setPopularHotels(res.data.data.slice(0, 3));
+          // Take first 8 hotels for the carousel
+          setPopularHotels(res.data.data.slice(0, 8));
         }
       } catch (error) {
         console.error('Error fetching hotels:', error);
@@ -132,39 +157,89 @@ const Home = () => {
     { icon: Heart, title: 'Best Price Guarantee', desc: 'Find a lower price? We will match it and give you a discount.' },
   ];
 
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.2 }
+    }
+  };
+
+  const staggerItem = {
+    hidden: { opacity: 0, y: 30 },
+    show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 100 } }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar />
       
       {/* Hero Section */}
-      <div className="relative h-[85vh] min-h-[600px] flex items-center justify-center">
-        {/* Background Images Wrapper */}
-        <div className="absolute inset-0 overflow-hidden z-0">
+      <div 
+        ref={heroRef}
+        className="relative h-[85vh] min-h-[600px] flex items-center justify-center group/hero overflow-hidden"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {/* Background Images Wrapper with Parallax */}
+        <motion.div style={{ y: heroY }} className="absolute inset-0 z-0 bg-gray-900 h-[140%] -top-[20%]">
           <AnimatePresence initial={false}>
             <motion.div 
               key={currentBg}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 1.5, ease: 'easeInOut' }}
+              initial={{ clipPath: 'inset(0 100% 0 0)', scale: 1.05 }}
+              animate={{ clipPath: 'inset(0 0% 0 0)', scale: 1 }}
+              exit={{ opacity: 0, transition: { duration: 0.8 } }}
+              transition={{ duration: 1.2, ease: [0.7, 0, 0.3, 1] }}
               className="absolute inset-0 bg-cover bg-center bg-no-repeat"
               style={{ backgroundImage: `url('${backgroundImages[currentBg]}')` }}
             />
           </AnimatePresence>
           {/* Overlay */}
           <div className="absolute inset-0 bg-black/40"></div>
+        </motion.div>
+
+        {/* Navigation Arrows */}
+        <button 
+          onClick={prevBg}
+          className="hidden md:block absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-20 bg-white/10 hover:bg-white/30 p-3 rounded-full backdrop-blur-md text-white opacity-0 group-hover/hero:opacity-100 transition-all duration-300"
+        >
+          <ChevronLeft className="w-6 h-6" />
+        </button>
+        <button 
+          onClick={nextBg}
+          className="hidden md:block absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-20 bg-white/10 hover:bg-white/30 p-3 rounded-full backdrop-blur-md text-white opacity-0 group-hover/hero:opacity-100 transition-all duration-300"
+        >
+          <ChevronRight className="w-6 h-6" />
+        </button>
+
+        {/* Indicators */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex space-x-2">
+          {backgroundImages.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentBg(idx)}
+              className={`h-2 rounded-full transition-all duration-500 shadow-sm ${
+                currentBg === idx ? 'bg-white w-8' : 'bg-white/50 hover:bg-white/80 w-2'
+              }`}
+            />
+          ))}
         </div>
 
         {/* Hero Content */}
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center pt-20">
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-            className="text-4xl md:text-6xl lg:text-7xl font-bold text-white tracking-tight mb-6"
-          >
-            Find your next stay
-          </motion.h1>
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center pt-20 overflow-hidden">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white tracking-tight mb-6 flex justify-center flex-wrap gap-x-3 overflow-hidden">
+            {"Find your next stay".split(" ").map((word, i) => (
+              <motion.span
+                key={i}
+                initial={{ y: "100%", opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.7, ease: [0.33, 1, 0.68, 1], delay: i * 0.15 }}
+                className="inline-block"
+              >
+                {word}
+              </motion.span>
+            ))}
+          </h1>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -367,31 +442,38 @@ const Home = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {popularHotels.map((hotel, idx) => (
-              <div key={idx} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 group cursor-pointer" onClick={() => navigate(`/hotels/${hotel._id}`)}>
-                <div className="relative h-56 overflow-hidden">
-                  <img src={hotel.images[0]} alt={hotel.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg flex items-center space-x-1 shadow-sm">
-                    <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                    <span className="text-sm font-bold text-gray-900">4.8</span>
+          <motion.div ref={carouselRef} className="overflow-hidden cursor-grab active:cursor-grabbing pb-8">
+            <motion.div 
+              drag="x" 
+              dragConstraints={{ right: 0, left: -carouselWidth }} 
+              whileTap={{ cursor: "grabbing" }}
+              className="flex gap-8"
+            >
+              {popularHotels.map((hotel, idx) => (
+                <div key={idx} className="min-w-[300px] md:min-w-[380px] flex-shrink-0 bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 group cursor-pointer" onClick={() => navigate(`/hotels/${hotel._id}`)}>
+                  <div className="relative h-56 overflow-hidden pointer-events-none">
+                    <img src={hotel.images[0]} alt={hotel.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg flex items-center space-x-1 shadow-sm">
+                      <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                      <span className="text-sm font-bold text-gray-900">4.8</span>
+                    </div>
                   </div>
-                </div>
-                <div className="p-6">
-                  <div className="text-sm text-gray-500 mb-2 flex items-center">
-                    <MapPin className="w-4 h-4 mr-1" /> {hotel.location?.city}, {hotel.location?.country}
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">{hotel.name}</h3>
-                  <div className="flex justify-between items-end mt-4 pt-4 border-t border-gray-50">
-                    <div>
-                      <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Starting from</p>
-                      <p className="text-2xl font-bold text-primary">₹{Number(hotel.pricePerNight).toFixed(2)}<span className="text-sm text-gray-500 font-normal"> / night</span></p>
+                  <div className="p-6 pointer-events-none">
+                    <div className="text-sm text-gray-500 mb-2 flex items-center">
+                      <MapPin className="w-4 h-4 mr-1" /> {hotel.location?.city}, {hotel.location?.country}
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">{hotel.name}</h3>
+                    <div className="flex justify-between items-end mt-4 pt-4 border-t border-gray-50">
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Starting from</p>
+                        <p className="text-2xl font-bold text-primary">₹{Number(hotel.pricePerNight).toFixed(2)}<span className="text-sm text-gray-500 font-normal"> / night</span></p>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </motion.div>
+          </motion.div>
         </div>
 
         {/* How it Works / User Journey */}
@@ -403,50 +485,56 @@ const Home = () => {
               <p className="text-gray-600 mt-4 max-w-2xl mx-auto text-lg">From finding the perfect property to securing your stay, we've made the entire process seamless and hassle-free.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-12 md:gap-8 relative">
+            <motion.div 
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true, amount: 0.3 }}
+              className="grid grid-cols-1 md:grid-cols-4 gap-12 md:gap-8 relative"
+            >
               {/* Connecting Line (Only visible on desktop) */}
               <div className="hidden md:block absolute top-12 left-[10%] w-[80%] h-1 bg-gradient-to-r from-indigo-100 via-indigo-200 to-indigo-100 z-0 rounded-full"></div>
               
               {/* Step 1 */}
-              <div className="relative z-10 flex flex-col items-center text-center group">
+              <motion.div variants={staggerItem} className="relative z-10 flex flex-col items-center text-center group">
                 <div className="w-24 h-24 bg-white rounded-2xl border-4 border-indigo-50 flex items-center justify-center mb-6 shadow-sm group-hover:border-indigo-500 group-hover:-translate-y-2 transition-all duration-300">
                   <Search className="w-10 h-10 text-indigo-600 group-hover:scale-110 transition-transform duration-300" />
                 </div>
                 <div className="bg-indigo-100 text-indigo-800 text-xs font-bold px-3 py-1 rounded-full mb-3">Step 1</div>
                 <h3 className="text-xl font-bold text-gray-900 mb-3">Search & Filter</h3>
                 <p className="text-gray-500 text-sm leading-relaxed px-2">Enter your desired destination, dates, and apply custom filters to discover your perfect hotel or resort.</p>
-              </div>
+              </motion.div>
 
               {/* Step 2 */}
-              <div className="relative z-10 flex flex-col items-center text-center group">
+              <motion.div variants={staggerItem} className="relative z-10 flex flex-col items-center text-center group">
                 <div className="w-24 h-24 bg-white rounded-2xl border-4 border-emerald-50 flex items-center justify-center mb-6 shadow-sm group-hover:border-emerald-500 group-hover:-translate-y-2 transition-all duration-300">
                   <Building2 className="w-10 h-10 text-emerald-600 group-hover:scale-110 transition-transform duration-300" />
                 </div>
                 <div className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full mb-3">Step 2</div>
                 <h3 className="text-xl font-bold text-gray-900 mb-3">Choose a Room</h3>
                 <p className="text-gray-500 text-sm leading-relaxed px-2">Browse through verified property photos, read authentic reviews, and select the room that fits your needs.</p>
-              </div>
+              </motion.div>
 
               {/* Step 3 */}
-              <div className="relative z-10 flex flex-col items-center text-center group">
+              <motion.div variants={staggerItem} className="relative z-10 flex flex-col items-center text-center group">
                 <div className="w-24 h-24 bg-white rounded-2xl border-4 border-amber-50 flex items-center justify-center mb-6 shadow-sm group-hover:border-amber-500 group-hover:-translate-y-2 transition-all duration-300">
                   <CreditCard className="w-10 h-10 text-amber-600 group-hover:scale-110 transition-transform duration-300" />
                 </div>
                 <div className="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full mb-3">Step 3</div>
                 <h3 className="text-xl font-bold text-gray-900 mb-3">Secure Booking</h3>
                 <p className="text-gray-500 text-sm leading-relaxed px-2">Provide guest details and confidently complete your reservation using our highly secure payment gateway.</p>
-              </div>
+              </motion.div>
 
               {/* Step 4 */}
-              <div className="relative z-10 flex flex-col items-center text-center group">
+              <motion.div variants={staggerItem} className="relative z-10 flex flex-col items-center text-center group">
                 <div className="w-24 h-24 bg-white rounded-2xl border-4 border-blue-50 flex items-center justify-center mb-6 shadow-sm group-hover:border-blue-500 group-hover:-translate-y-2 transition-all duration-300">
                   <CheckCircle2 className="w-10 h-10 text-blue-600 group-hover:scale-110 transition-transform duration-300" />
                 </div>
                 <div className="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full mb-3">Step 4</div>
                 <h3 className="text-xl font-bold text-gray-900 mb-3">Instant Confirmation</h3>
                 <p className="text-gray-500 text-sm leading-relaxed px-2">Receive your booking confirmation instantly via email and manage it anytime in your user dashboard.</p>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
             
             <div className="mt-16 text-center">
               <button onClick={() => navigate('/hotels')} className="px-8 py-4 bg-gray-900 text-white font-bold rounded-xl hover:bg-primary transition-colors shadow-lg hover:shadow-xl flex items-center mx-auto">
@@ -485,10 +573,10 @@ const Home = () => {
       </div>
 
       {/* Footer */}
-      <footer className="bg-[#0f172a] text-gray-300 pt-16 pb-8">
+      <footer className="bg-[#0a1128] pt-20 pb-10 border-t border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
-            <div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8 mb-16">
+            <div className="col-span-1">
               <h3 className="text-2xl font-bold text-white tracking-tight mb-6 flex items-center">
                 <MapPin className="w-6 h-6 mr-2 text-primary" /> Stayzium
               </h3>
@@ -534,38 +622,38 @@ const Home = () => {
 
             <div>
               <h4 className="text-white font-semibold mb-6">Contact</h4>
-              <ul className="space-y-4 text-sm">
+              <ul className="space-y-4 text-white-sm">
                 <li className="flex items-start">
-                  <MapPin className="w-5 h-5 mr-3 text-gray-500 mt-0.5" />
-                  <span>123 Travel Avenue, New York, NY 10001, United States</span>
+                  <MapPin className="w-15 h-5 mr-3 text-gray-500 mt-0.5" />
+                  <span className="text-gray-400 flex items-center gap-2 font-medium">123 Travel Avenue, New York, NY 10001, United States</span>
                 </li>
                 <li className="flex items-center">
                   <Clock className="w-5 h-5 mr-3 text-gray-500" />
-                  <span>Mon-Fri: 9:00 AM - 6:00 PM</span>
+                  <span className="text-gray-400 flex items-center gap-2 font-medium">Mon-Fri: 9:00 AM - 6:00 PM</span>
                 </li>
                 <li className="flex items-center">
                   <Mail className="w-5 h-5 mr-3 text-gray-500" />
-                  <span>hetmahida353@gmail.com</span>
+                  <span className="text-gray-400 flex items-center gap-2 font-medium">hetmahida353@gmail.com</span>
                 </li>
               </ul>
             </div>
           </div>
           
           <div className="border-t border-gray-800 pt-8 pb-4 flex flex-col md:flex-row justify-between items-center text-sm">
-            <div className="flex flex-wrap justify-center md:justify-start gap-x-6 gap-y-3 mb-6 md:mb-0">
+            <div className="flex flex-col md:flex-row items-center justify-center md:justify-start gap-4 mb-6 md:mb-0">
               <Link to="/terms" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 font-medium">
                 <CheckCircle2 className="w-4 h-4 text-[#2962ff]" /> Terms of Service
               </Link>
-              <div className="hidden md:block w-px h-4 bg-gray-700 mt-1"></div>
+              <div className="hidden md:block w-px h-4 bg-gray-700"></div>
               <Link to="/privacy" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 font-medium">
                 <Shield className="w-4 h-4 text-[#2962ff]" /> Privacy Policy
               </Link>
-              <div className="hidden md:block w-px h-4 bg-gray-700 mt-1"></div>
+              <div className="hidden md:block w-px h-4 bg-gray-700"></div>
               <span className="text-gray-400 flex items-center gap-2 font-medium">
                 <CreditCard className="w-4 h-4 text-[#2962ff]" /> 100% Secure Payments
               </span>
             </div>
-            <p className="text-gray-500 font-medium">&copy; {new Date().getFullYear()} Stayzium Booking. All rights reserved.</p>
+            <p className="text-gray-500 font-medium text-center md:text-left">&copy; {new Date().getFullYear()} Stayzium Booking. All rights reserved.</p>
           </div>
         </div>
       </footer>

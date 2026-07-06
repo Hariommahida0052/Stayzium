@@ -153,7 +153,7 @@ const Home = () => {
 
   const features = [
     { icon: Shield, title: 'Secure Booking', desc: 'Your payments are secure with our encrypted payment system.' },
-    { icon: Clock, title: '24/7 Support', desc: 'Our customer support team is available round the clock to assist you with your bookings.' },
+    { icon: Calendar, title: 'Flexible Cancellation', desc: 'Plans change? No problem. Enjoy free cancellation on most of our properties.' },
     { icon: Heart, title: 'Best Price Guarantee', desc: 'Find a lower price? We will match it and give you a discount.' },
   ];
 

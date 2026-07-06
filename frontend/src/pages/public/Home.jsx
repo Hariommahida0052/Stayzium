@@ -186,10 +186,10 @@ const Home = () => {
           <AnimatePresence initial={false}>
             <motion.div 
               key={currentBg}
-              initial={{ clipPath: 'inset(0 100% 0 0)', scale: 1.05 }}
-              animate={{ clipPath: 'inset(0 0% 0 0)', scale: 1 }}
-              exit={{ opacity: 0, transition: { duration: 0.8 } }}
-              transition={{ duration: 1.2, ease: [0.7, 0, 0.3, 1] }}
+              initial={{ opacity: 0, scale: 1.1 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1.5, ease: 'easeInOut' }}
               className="absolute inset-0 bg-cover bg-center bg-no-repeat"
               style={{ backgroundImage: `url('${backgroundImages[currentBg]}')` }}
             />

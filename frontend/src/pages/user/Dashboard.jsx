@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MapPin, Calendar, CreditCard, Clock, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import Loader from '../../components/common/Loader';
 import userService from '../../services/userService';
 
 const UserDashboard = () => {
@@ -39,7 +40,7 @@ const UserDashboard = () => {
   ];
 
   if (loading) {
-    return <div className="text-center py-12 text-gray-500">Loading dashboard...</div>;
+    return <Loader text="Loading dashboard..." fullScreen={true} />;
   }
 
   return (

@@ -3,9 +3,11 @@ import { Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Badge from '../ui/Badge';
 import Button from '../ui/Button';
+import { calculateDiscountedPrice } from '../../utils/discountUtils';
 
-const RoomCard = ({ room, hotelId, locationSearch, onImageClick, onSelect, buttonText = "Reserve Room", showButton = true }) => {
+const RoomCard = ({ room, hotelId, locationSearch, onImageClick, onSelect, buttonText = "Reserve Room", showButton = true, activeOffer }) => {
   const roomImgs = room.images && room.images.length > 0 ? room.images : (room.image ? [room.image] : ['/images/room.png']);
+  const discountedPrice = activeOffer ? calculateDiscountedPrice(room.price, activeOffer.discount) : room.price;
   
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex flex-col sm:flex-row gap-6 hover:shadow-md transition-shadow">
@@ -32,7 +34,14 @@ const RoomCard = ({ room, hotelId, locationSearch, onImageClick, onSelect, butto
       </div>
       <div className="flex-1 flex flex-col justify-between">
         <div>
-          <h3 className="text-xl font-bold text-gray-900">{room.title}</h3>
+          <div className="flex justify-between items-start">
+            <h3 className="text-xl font-bold text-gray-900">{room.title}</h3>
+            {activeOffer && (
+              <span className={`inline-block px-2 py-1 text-xs font-bold text-white rounded ${activeOffer.color || 'bg-blue-500'}`}>
+                {activeOffer.discount}
+              </span>
+            )}
+          </div>
           <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-sm text-gray-500 font-medium">
             <p className="flex items-center"><Users className="w-4 h-4 mr-1" /> Max: {room.maxPeople || 2}</p>
             {room.type && <p className="flex items-center">Type: {room.type}</p>}
@@ -52,7 +61,10 @@ const RoomCard = ({ room, hotelId, locationSearch, onImageClick, onSelect, butto
         </div>
         <div className="flex justify-between items-end mt-4">
           <div>
-            <span className="text-2xl font-bold text-gray-900">₹{Number(room.price).toFixed(2)}</span>
+            {activeOffer && (
+              <div className="text-sm text-gray-400 line-through">₹{Number(room.price).toFixed(2)}</div>
+            )}
+            <span className="text-2xl font-bold text-gray-900">₹{Number(discountedPrice).toFixed(2)}</span>
             <span className="text-sm text-gray-500 ml-1">/ night</span>
           </div>
           {showButton && hotelId && (

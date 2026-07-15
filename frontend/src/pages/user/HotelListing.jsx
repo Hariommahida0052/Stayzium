@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { MapPin, Search, Star, Filter, ChevronDown } from 'lucide-react';
+import { MapPin, Search, Star, Filter, ChevronDown, Tag } from 'lucide-react';
 import hotelService from '../../services/hotelService';
+import offerService from '../../services/offerService';
 import Navbar from '../../components/common/Navbar';
 import HotelCard from '../../components/common/HotelCard';
 
@@ -10,14 +11,32 @@ const HotelListing = () => {
   const locationUrl = useLocation();
   const queryParams = new URLSearchParams(locationUrl.search);
   const initialSearch = queryParams.get('search') || '';
+  const offerId = queryParams.get('offerId') || '';
   const [hotels, setHotels] = useState([]);
   const [searchTerm, setSearchTerm] = useState(initialSearch);
-  const [maxPrice, setMaxPrice] = useState(50000);
+  const [maxPrice, setMaxPrice] = useState(100000);
   const [selectedStars, setSelectedStars] = useState([]);
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [selectedFacilities, setSelectedFacilities] = useState([]);
+  const [activeOffer, setActiveOffer] = useState(null);
 
   const [sortBy, setSortBy] = useState('-createdAt');
+
+  useEffect(() => {
+    if (offerId) {
+      const fetchOffer = async () => {
+        try {
+          const res = await offerService.getOfferById(offerId);
+          if (res.data.success) {
+            setActiveOffer(res.data.data);
+          }
+        } catch (error) {
+          console.error('Error fetching offer:', error);
+        }
+      };
+      fetchOffer();
+    }
+  }, [offerId]);
 
   useEffect(() => {
     const fetchHotels = async () => {
@@ -28,6 +47,7 @@ const HotelListing = () => {
         if (selectedStars.length > 0) queryParts.push(`rating=${selectedStars.join(',')}`);
         if (selectedTypes.length > 0) queryParts.push(`propertyType=${selectedTypes.join(',')}`);
         if (selectedFacilities.length > 0) queryParts.push(`amenities=${selectedFacilities.join(',')}`);
+        if (offerId) queryParts.push(`offerId=${offerId}`);
         if (sortBy) queryParts.push(`sort=${sortBy}`);
 
         const queryString = queryParts.join('&');
@@ -47,7 +67,7 @@ const HotelListing = () => {
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [searchTerm, maxPrice, selectedStars, selectedTypes, selectedFacilities, sortBy]);
+  }, [searchTerm, maxPrice, selectedStars, selectedTypes, selectedFacilities, sortBy, offerId]);
 
   const handleStarToggle = (star) => {
     setSelectedStars(prev => 
@@ -94,6 +114,16 @@ const HotelListing = () => {
           </div>
         </div>
       </div>
+
+      {activeOffer && (
+        <div className="bg-blue-50 border-b border-blue-100 py-3">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-center text-blue-800">
+            <Tag className="w-5 h-5 mr-2 text-blue-600" />
+            <span className="font-semibold mr-2">{activeOffer.title}:</span>
+            <span>{activeOffer.discount} applied on these participating properties!</span>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8">
         {/* Filters Sidebar */}
@@ -195,6 +225,7 @@ const HotelListing = () => {
               <HotelCard 
                 key={hotel._id}
                 hotel={hotel}
+                activeOffer={activeOffer}
                 onClick={() => navigate(`/hotels/${hotel._id}${locationUrl.search}`)}
               />
             )) : (

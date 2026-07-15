@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Shield, Key, CheckCircle, XCircle, Loader2, Eye, EyeOff } from 'lucide-react';
+import { Bell, Shield, Key, CheckCircle, XCircle, Eye, EyeOff, Loader2 } from 'lucide-react';
 import userService from '../../services/userService';
+import Loader from '../../components/common/Loader';
 
 const Settings = () => {
   const [preferences, setPreferences] = useState({
@@ -99,11 +100,7 @@ const Settings = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 text-primary animate-spin" />
-      </div>
-    );
+    return <Loader text="Loading settings..." fullScreen={true} />;
   }
 
   return (

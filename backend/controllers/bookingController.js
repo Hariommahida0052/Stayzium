@@ -22,7 +22,7 @@ const getDatesInRange = (startDate, endDate) => {
 // @access  Private (Traveler)
 exports.createBooking = async (req, res, next) => {
   try {
-    const { hotel, room, checkInDate, checkOutDate, guests, razorpayOrderId, razorpayPaymentId } = req.body;
+    const { hotel, room, checkInDate, checkOutDate, guests, razorpayOrderId, razorpayPaymentId, offerId } = req.body;
 
     const roomDoc = await Room.findById(room);
     if (!roomDoc) {
@@ -36,10 +36,35 @@ exports.createBooking = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Check-out time must be after check-in time' });
     }
 
+    let currentRoomPrice = roomDoc.price;
+    let appliedOffer = undefined;
+
+    if (offerId) {
+      const Offer = require('../models/Offer');
+      const offerDoc = await Offer.findById(offerId);
+      if (offerDoc && offerDoc.isActive) {
+        const discountString = offerDoc.discount;
+        const numMatch = discountString.match(/\d+(\.\d+)?/);
+        if (numMatch) {
+          const numValue = parseFloat(numMatch[0]);
+          const isPercentage = discountString.includes('%');
+          if (isPercentage) {
+            currentRoomPrice = Math.max(0, currentRoomPrice - (currentRoomPrice * (numValue / 100)));
+          } else {
+            currentRoomPrice = Math.max(0, currentRoomPrice - numValue);
+          }
+          appliedOffer = {
+            title: offerDoc.title,
+            discount: offerDoc.discount
+          };
+        }
+      }
+    }
+
     // Calculate exact duration and prorated price
     const diffMs = checkOut.getTime() - checkIn.getTime();
     const durationHours = diffMs / (1000 * 60 * 60);
-    const baseAmount = (durationHours / 24) * roomDoc.price;
+    const baseAmount = (durationHours / 24) * currentRoomPrice;
     const totalAmount = baseAmount + (baseAmount * 0.18);
 
     const requestedDates = getDatesInRange(checkInDate, checkOutDate);
@@ -66,7 +91,8 @@ exports.createBooking = async (req, res, next) => {
       totalAmount,
       guests,
       razorpayOrderId,
-      razorpayPaymentId
+      razorpayPaymentId,
+      offer: appliedOffer
     });
 
     // 3. Update room unavailability dates

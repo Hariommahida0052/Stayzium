@@ -17,6 +17,7 @@ exports.getHotels = async (req, res, next) => {
     delete reqQuery.rating;
     delete reqQuery.search;
     delete reqQuery.sort;
+    delete reqQuery.offerId;
 
     // Base query: Only approved hotels
     let queryStr = JSON.stringify(reqQuery);
@@ -41,7 +42,7 @@ exports.getHotels = async (req, res, next) => {
 
     if (req.query.amenities) {
       const amenitiesArr = req.query.amenities.split(',');
-      dbQuery = dbQuery.where('amenities').in(amenitiesArr);
+      dbQuery = dbQuery.where('amenities').all(amenitiesArr);
     }
 
     if (req.query.propertyType) {
@@ -51,10 +52,10 @@ exports.getHotels = async (req, res, next) => {
 
     if (req.query.rating) {
       const ratingsArr = req.query.rating.split(',').map(Number);
-      // Let's assume if 5, 4, 3 are selected, we want rating >= minimum of selected, or exact match.
-      // Usually users want rating >= lowest selected rating.
-      const minRating = Math.min(...ratingsArr);
-      dbQuery = dbQuery.where('rating').gte(minRating);
+      const ratingConditions = ratingsArr.map(r => ({
+        rating: { $gte: r, $lt: r + 1 }
+      }));
+      dbQuery = dbQuery.and([{ $or: ratingConditions }]);
     }
 
     if (req.query.search) {
@@ -65,6 +66,20 @@ exports.getHotels = async (req, res, next) => {
         { 'location.city': searchRegex },
         { 'location.country': searchRegex }
       ]);
+    }
+
+    if (req.query.offerId) {
+      const Offer = require('../models/Offer');
+      const offer = await Offer.findById(req.query.offerId);
+      if (offer) {
+        if (offer.participatingHotels && offer.participatingHotels.length > 0) {
+          dbQuery = dbQuery.where('_id').in(offer.participatingHotels);
+        }
+        // If participatingHotels is empty, it applies to all hotels, so no filter is added
+      } else {
+        // Offer not found
+        dbQuery = dbQuery.where('_id').in([]);
+      }
     }
 
     // Sorting

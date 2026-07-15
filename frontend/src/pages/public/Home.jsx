@@ -177,13 +177,14 @@ const Home = () => {
       {/* Hero Section */}
       <div 
         ref={heroRef}
-        className="relative h-[85vh] min-h-[600px] flex items-center justify-center group/hero overflow-hidden"
+        className="relative h-[85vh] min-h-[600px] flex items-center justify-center group/hero"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Background Images Wrapper with Parallax */}
-        <motion.div style={{ y: heroY }} className="absolute inset-0 z-0 bg-gray-900 h-[140%] -top-[20%]">
-          <AnimatePresence initial={false}>
+        <div className="absolute inset-0 overflow-hidden z-0 pointer-events-none">
+          {/* Background Images Wrapper with Parallax */}
+          <motion.div style={{ y: heroY }} className="absolute inset-0 bg-gray-900 h-[140%] -top-[20%]">
+            <AnimatePresence initial={false}>
             <motion.div 
               key={currentBg}
               initial={{ opacity: 0, scale: 1.1 }}
@@ -193,10 +194,11 @@ const Home = () => {
               className="absolute inset-0 bg-cover bg-center bg-no-repeat"
               style={{ backgroundImage: `url('${backgroundImages[currentBg]}')` }}
             />
-          </AnimatePresence>
-          {/* Overlay */}
-          <div className="absolute inset-0 bg-black/40"></div>
-        </motion.div>
+            </AnimatePresence>
+            {/* Overlay */}
+            <div className="absolute inset-0 bg-black/40"></div>
+          </motion.div>
+        </div>
 
         {/* Navigation Arrows */}
         <button 
@@ -226,7 +228,7 @@ const Home = () => {
         </div>
 
         {/* Hero Content */}
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center pt-20 overflow-hidden">
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center pt-20">
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white tracking-tight mb-6 flex justify-center flex-wrap gap-x-3 overflow-hidden">
             {"Find your next stay".split(" ").map((word, i) => (
               <motion.span
@@ -279,6 +281,8 @@ const Home = () => {
                   className="w-full bg-transparent py-4 pl-12 pr-4 font-medium text-gray-900 outline-none placeholder-gray-500 rounded-xl cursor-pointer"
                   wrapperClassName="w-full"
                   dateFormat="dd MMM yyyy"
+                  popperClassName="datepicker-popper"
+                  popperPlacement="bottom-start"
                 />
               </div>
 
@@ -297,7 +301,7 @@ const Home = () => {
                 
                 {/* Guest Selection Popup */}
                 {isGuestPopupOpen && (
-                  <div className="absolute top-full right-0 md:left-0 mt-3 w-[320px] bg-white rounded-2xl shadow-2xl border border-gray-100 p-5 z-50" onClick={(e) => e.stopPropagation()}>
+                  <div className="absolute top-full right-0 sm:left-0 mt-3 w-[calc(100vw-32px)] sm:w-[320px] max-w-[320px] bg-white rounded-2xl shadow-2xl border border-gray-100 p-5 z-50 transform sm:translate-x-0" style={{ transformOrigin: 'top right' }} onClick={(e) => e.stopPropagation()}>
                     <div className="space-y-5">
                       {/* Adults */}
                       <div className="flex justify-between items-center">

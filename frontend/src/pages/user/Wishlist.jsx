@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Heart, MapPin, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import userService from '../../services/userService';
+import Loader from '../../components/common/Loader';
 
 const Wishlist = () => {
   const [wishlistItems, setWishlistItems] = useState([]);
@@ -44,7 +45,7 @@ const Wishlist = () => {
       </div>
 
       {loading ? (
-        <div className="text-center py-12 text-gray-500">Loading your wishlist...</div>
+        <Loader text="Loading your wishlist..." fullScreen={false} />
       ) : wishlistItems.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-2xl border border-gray-100">
           <p className="text-gray-500 mb-4">Your wishlist is empty.</p>

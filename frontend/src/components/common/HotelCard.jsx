@@ -2,12 +2,17 @@ import React from 'react';
 import { MapPin, Star } from 'lucide-react';
 import Button from '../ui/Button';
 
-const HotelCard = ({ hotel, onClick }) => {
+const HotelCard = ({ hotel, activeOffer, onClick }) => {
   return (
     <div 
       onClick={onClick}
-      className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col md:flex-row hover:shadow-lg transition-all hover:-translate-y-1 cursor-pointer group"
+      className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col md:flex-row hover:shadow-lg transition-all hover:-translate-y-1 cursor-pointer group relative"
     >
+      {activeOffer && (
+        <div className={`absolute top-4 left-4 z-10 text-white font-bold px-3 py-1 rounded-lg shadow-sm ${activeOffer.color || 'bg-blue-500'}`}>
+          {activeOffer.discount}
+        </div>
+      )}
       <div className="w-full md:w-80 h-64 md:h-auto flex-shrink-0 overflow-hidden bg-gray-100 relative min-h-[240px]">
         <img 
           src={hotel.images && hotel.images.length > 0 ? hotel.images[0] : '/images/room.png'} 
@@ -52,7 +57,12 @@ const HotelCard = ({ hotel, onClick }) => {
             <p className="text-sm text-gray-500">{hotel.reviewsCount || '120'} reviews</p>
           </div>
           <div className="text-right">
-            <p className="text-3xl font-bold text-[#2962ff]">₹{Number(hotel.pricePerNight).toFixed(2)}</p>
+            {activeOffer && (
+               <p className="text-sm text-gray-400 line-through mb-1">₹{Number(hotel.pricePerNight).toFixed(2)}</p>
+            )}
+            <p className="text-3xl font-bold text-[#2962ff]">
+              {activeOffer ? 'Special Price' : `₹${Number(hotel.pricePerNight).toFixed(2)}`}
+            </p>
             <p className="text-sm text-gray-500 mb-2">per night</p>
             <Button variant="primary">
               View Details

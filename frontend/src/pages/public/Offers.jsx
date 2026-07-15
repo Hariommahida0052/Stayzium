@@ -91,9 +91,7 @@ const Offers = () => {
                   <button 
                     disabled={isExpired(offer.validUntil)}
                     onClick={() => {
-                      // Navigate to hotels with specific offer filter in state if needed
-                      // For now, we'll navigate to /hotels
-                      navigate('/hotels');
+                      navigate(`/hotels?offerId=${offer._id}`);
                     }}
                     className="w-full py-3 px-4 border border-primary text-primary font-medium rounded-lg hover:bg-primary hover:text-white transition-colors flex items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-primary"
                   >

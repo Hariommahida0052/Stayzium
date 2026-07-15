@@ -11,6 +11,9 @@ import { AuthContext } from '../../context/AuthContext';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import DateTimePicker from '../../components/common/DateTimePicker';
+import offerService from '../../services/offerService';
+import Loader from '../../components/common/Loader';
+import { calculateDiscountedPrice } from '../../utils/discountUtils';
 
 const BookingPage = () => {
   const { id } = useParams(); // hotel id
@@ -21,6 +24,7 @@ const BookingPage = () => {
   const targetRoomId = queryParams.get('roomId');
   const inDateStr = queryParams.get('in');
   const outDateStr = queryParams.get('out');
+  const offerId = queryParams.get('offerId');
   const adults = queryParams.get('adults') || 2;
   const children = queryParams.get('children') || 0;
 
@@ -51,6 +55,7 @@ const BookingPage = () => {
   const [hotel, setHotel] = useState(null);
   const [room, setRoom] = useState(null);
   const [publicSettings, setPublicSettings] = useState(null);
+  const [activeOffer, setActiveOffer] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const [formData, setFormData] = useState({
@@ -101,6 +106,18 @@ const BookingPage = () => {
         } catch (settingsErr) {
           console.error("Failed to load public settings", settingsErr);
         }
+
+        // Fetch offer details
+        if (offerId) {
+          try {
+            const res = await offerService.getOfferById(offerId);
+            if (res.data.success) {
+              setActiveOffer(res.data.data);
+            }
+          } catch (offerErr) {
+            console.error("Failed to load offer", offerErr);
+          }
+        }
       } catch (error) {
         console.error('Error fetching booking data:', error);
       }
@@ -123,7 +140,8 @@ const BookingPage = () => {
 
     setIsSubmitting(true);
     try {
-      const basePrice = (durationHours / 24) * room.price;
+      const roomPrice = activeOffer ? calculateDiscountedPrice(room.price, activeOffer.discount) : room.price;
+      const basePrice = (durationHours / 24) * roomPrice;
       const totalAmount = basePrice + (basePrice * 0.18);
 
       // 1. Load Razorpay script
@@ -170,7 +188,8 @@ const BookingPage = () => {
                 totalAmount,
                 guests: Number(adults) + Number(children),
                 razorpayOrderId: response.razorpay_order_id,
-                razorpayPaymentId: response.razorpay_payment_id
+                razorpayPaymentId: response.razorpay_payment_id,
+                offerId: offerId || undefined
               };
 
               const bookingRes = await bookingService.createBooking(payload);
@@ -183,7 +202,7 @@ const BookingPage = () => {
           } catch (err) {
             console.error('Payment verification failed', err);
             toast.dismiss('payment-verify');
-            toast.error('Payment verification failed. Please contact support.');
+            toast.error(err.response?.data?.message || err.message || 'Payment verification failed. Please contact support.');
           }
         },
         prefill: {
@@ -210,7 +229,7 @@ const BookingPage = () => {
   };
 
   if (loading) {
-    return <div className="min-h-screen bg-gray-50 pt-24 text-center">Loading booking details...</div>;
+    return <Loader text="Loading booking details..." fullScreen={true} />;
   }
 
   return (
@@ -318,17 +337,50 @@ const BookingPage = () => {
               </div>
 
               <div className="pt-6 space-y-3">
+                {activeOffer && (
+                  <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 mb-2 flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-bold text-blue-800 uppercase tracking-wide">Offer Applied</span>
+                      <p className="text-sm font-semibold text-blue-900 mt-0.5">{activeOffer.title}</p>
+                    </div>
+                    <span className={`inline-block px-2 py-1 text-xs font-bold text-white rounded ${activeOffer.color || 'bg-blue-500'}`}>
+                      {activeOffer.discount}
+                    </span>
+                  </div>
+                )}
+                
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Base Price</span>
-                  <span className="font-medium text-gray-900">₹{room ? Number((durationHours / 24) * room.price).toFixed(2) : '0.00'}</span>
+                  <div className="text-right">
+                    {activeOffer && (
+                      <span className="text-xs text-gray-400 line-through mr-2">₹{room ? Number((durationHours / 24) * room.price).toFixed(2) : '0.00'}</span>
+                    )}
+                    <span className="font-medium text-gray-900">
+                      ₹{room ? Number((durationHours / 24) * (activeOffer ? calculateDiscountedPrice(room.price, activeOffer.discount) : room.price)).toFixed(2) : '0.00'}
+                    </span>
+                  </div>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Taxes & Fees (18%)</span>
-                  <span className="font-medium text-gray-900">₹{room ? Number(((durationHours / 24) * room.price) * 0.18).toFixed(2) : '0.00'}</span>
+                  <div className="text-right">
+                    {activeOffer && (
+                      <span className="text-xs text-gray-400 line-through mr-2">₹{room ? Number(((durationHours / 24) * room.price) * 0.18).toFixed(2) : '0.00'}</span>
+                    )}
+                    <span className="font-medium text-gray-900">
+                      ₹{room ? Number(((durationHours / 24) * (activeOffer ? calculateDiscountedPrice(room.price, activeOffer.discount) : room.price)) * 0.18).toFixed(2) : '0.00'}
+                    </span>
+                  </div>
                 </div>
                 <div className="flex justify-between text-lg font-bold pt-4 border-t border-gray-100">
                   <span className="text-gray-900">Total</span>
-                  <span className="text-[#2962ff]">₹{room ? Number(((durationHours / 24) * room.price) * 1.18).toFixed(2) : '0.00'}</span>
+                  <div className="text-right">
+                    {activeOffer && (
+                      <span className="text-sm text-gray-400 line-through font-normal block mb-1">₹{room ? Number(((durationHours / 24) * room.price) * 1.18).toFixed(2) : '0.00'}</span>
+                    )}
+                    <span className="text-[#2962ff]">
+                      ₹{room ? Number(((durationHours / 24) * (activeOffer ? calculateDiscountedPrice(room.price, activeOffer.discount) : room.price)) * 1.18).toFixed(2) : '0.00'}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>

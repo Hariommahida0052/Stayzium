@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Trash2 } from 'lucide-react';
 import hotelService from '../../services/hotelService';
 import uploadService from '../../services/uploadService';
 import toast from 'react-hot-toast';
@@ -84,6 +84,22 @@ const OwnerHotels = () => {
       toast.error('Error uploading image');
     }
     setUploadingImage(false);
+  };
+
+  const handleDeleteImage = async (hotelId, imageUrl) => {
+    try {
+      const hotel = properties.find(p => p._id === hotelId);
+      const updatedImages = hotel.images.filter(img => img !== imageUrl);
+      
+      const updateRes = await hotelService.updateHotel(hotelId, { images: updatedImages });
+      if (updateRes.data.success) {
+        setProperties(properties.map(p => p._id === hotelId ? { ...p, images: updatedImages } : p));
+        toast.success('Image deleted successfully');
+      }
+    } catch (error) {
+      console.error('Error deleting image:', error);
+      toast.error('Error deleting image');
+    }
   };
 
   const fetchHotels = async () => {
@@ -209,36 +225,62 @@ const OwnerHotels = () => {
       />
       {/* Image Upload Modal */}
       {isImageModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-gray-900">Upload Property Photo</h2>
-              <button onClick={() => setIsImageModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsImageModalOpen(false)}></div>
+          <div className="relative bg-white rounded-2xl max-w-md w-full p-6 shadow-xl flex flex-col max-h-[90vh] z-10">
+            <div className="flex justify-between items-center mb-6 shrink-0 bg-white">
+              <h2 className="text-xl font-bold text-gray-900">Manage Property Photos</h2>
+              <button onClick={() => setIsImageModalOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors p-1">
                 <X className="w-6 h-6" />
               </button>
             </div>
             
-            <form onSubmit={handleImageUpload} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Select Image File</label>
-                <input 
-                  type="file" 
-                  accept="image/*"
-                  onChange={(e) => setImageFile(e.target.files[0])}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" 
-                  required
-                />
-              </div>
+            <div className="overflow-y-auto flex-1 min-h-0 pr-2 custom-scrollbar">
+              {/* Existing Images */}
+              {properties.find(p => p._id === selectedHotelId)?.images?.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-3">Existing Photos</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {properties.find(p => p._id === selectedHotelId).images.map((imgUrl, idx) => (
+                      <div key={idx} className="relative group rounded-lg overflow-hidden border border-gray-200 aspect-video">
+                        <img src={imgUrl.startsWith('http') ? imgUrl : `${process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL.replace('/api', '') : 'http://localhost:5000'}${imgUrl}`} alt="Hotel" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <button 
+                            onClick={() => handleDeleteImage(selectedHotelId, imgUrl)}
+                            className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-sm"
+                            title="Delete Image"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-              <div className="pt-4 flex gap-3">
-                <button type="button" onClick={() => setIsImageModalOpen(false)} className="flex-1 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200">
-                  Cancel
-                </button>
-                <button type="submit" disabled={uploadingImage || !imageFile} className="flex-1 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50">
-                  {uploadingImage ? 'Uploading...' : 'Upload'}
-                </button>
-              </div>
-            </form>
+              <form onSubmit={handleImageUpload} className="space-y-4 border-t border-gray-100 pt-5 mt-2">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Upload New Photo</label>
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    onChange={(e) => setImageFile(e.target.files[0])}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none bg-gray-50/50" 
+                    required
+                  />
+                </div>
+
+                <div className="pt-2 flex gap-3">
+                  <button type="button" onClick={() => setIsImageModalOpen(false)} className="flex-1 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors">
+                    Close
+                  </button>
+                  <button type="submit" disabled={uploadingImage || !imageFile} className="flex-1 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors shadow-sm">
+                    {uploadingImage ? 'Uploading...' : 'Upload Photo'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}

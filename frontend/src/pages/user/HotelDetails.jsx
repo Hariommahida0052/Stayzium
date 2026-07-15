@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import { MapPin, Users, Star, BedDouble, Heart, MessageSquare, Trash2, Edit2 } from 'lucide-react';
 import Navbar from '../../components/common/Navbar';
+import Loader from '../../components/common/Loader';
 import ImageSlider from '../../components/common/ImageSlider';
 import hotelService from '../../services/hotelService';
 import roomService from '../../services/roomService';
@@ -13,6 +14,8 @@ import RoomCard from '../../components/common/RoomCard';
 import DateTimePicker from '../../components/common/DateTimePicker';
 import toast from 'react-hot-toast';
 import { showConfirm } from '../../utils/toastUtils';
+import offerService from '../../services/offerService';
+import { calculateDiscountedPrice } from '../../utils/discountUtils';
 
 const HotelDetails = () => {
   const { id } = useParams();
@@ -20,6 +23,9 @@ const HotelDetails = () => {
   const queryParams = new URLSearchParams(locationUrl.search);
   const inDate = queryParams.get('in');
   const outDate = queryParams.get('out');
+  const offerId = queryParams.get('offerId');
+  const adultsParam = queryParams.get('adults');
+  const childrenParam = queryParams.get('children');
   
   const { user } = useContext(AuthContext);
 
@@ -29,6 +35,7 @@ const HotelDetails = () => {
   const [loading, setLoading] = useState(true);
   
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const [activeOffer, setActiveOffer] = useState(null);
   
   // Review form state
   const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' });
@@ -38,7 +45,29 @@ const HotelDetails = () => {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [checkIn, setCheckIn] = useState(inDate ? new Date(inDate) : null);
   const [checkOut, setCheckOut] = useState(outDate ? new Date(outDate) : null);
+  const [guestsConfig, setGuestsConfig] = useState({ 
+    adults: adultsParam ? parseInt(adultsParam, 10) : 2, 
+    children: childrenParam ? parseInt(childrenParam, 10) : 0 
+  });
+  const [isGuestPopupOpen, setIsGuestPopupOpen] = useState(false);
   const navigate = useNavigate();
+
+  // Load offer details
+  useEffect(() => {
+    if (offerId) {
+      const fetchOffer = async () => {
+        try {
+          const res = await offerService.getOfferById(offerId);
+          if (res.data.success) {
+            setActiveOffer(res.data.data);
+          }
+        } catch (error) {
+          console.error('Error fetching offer:', error);
+        }
+      };
+      fetchOffer();
+    }
+  }, [offerId]);
 
   // Calculate Duration and Price
   let durationHours = 0;
@@ -57,7 +86,8 @@ const HotelDetails = () => {
     if (!durationString) durationString = 'Less than an hour';
 
     const basePrice = selectedRoom ? selectedRoom.price : (hotel?.pricePerNight || 0);
-    totalPrice = (durationHours / 24) * basePrice;
+    const discountedBasePrice = activeOffer ? calculateDiscountedPrice(basePrice, activeOffer.discount) : basePrice;
+    totalPrice = (durationHours / 24) * discountedBasePrice;
   }
 
   // Lightbox state
@@ -147,7 +177,7 @@ const HotelDetails = () => {
     setLightboxOpen(true);
   };
 
-  if (loading) return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading...</div>;
+  if (loading) return <Loader text="Loading hotel details..." fullScreen={true} />;
   if (!hotel) return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Hotel not found.</div>;
 
   const galleryImages = hotel.images && hotel.images.length > 0 ? hotel.images : ['/images/heritage.png'];
@@ -248,6 +278,7 @@ const HotelDetails = () => {
                       onImageClick={openLightbox}
                       onSelect={(r) => setSelectedRoom(r)}
                       buttonText={selectedRoom?._id === room._id ? "Selected" : "Select Room"}
+                      activeOffer={activeOffer}
                     />
                   ))}
                 </div>
@@ -353,9 +384,19 @@ const HotelDetails = () => {
           <div className="w-full lg:w-[350px]">
             <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 sticky top-24">
               <div className="flex flex-col mb-6 pb-6 border-b border-gray-100">
-                <div className="flex items-end">
-                  <span className="text-3xl font-bold text-gray-900">₹{Number(selectedRoom ? selectedRoom.price : hotel.pricePerNight).toFixed(2)}</span>
-                  <span className="text-gray-500 ml-1 mb-1">/ 24 hrs {selectedRoom ? '' : 'avg'}</span>
+                <div className="flex flex-col mb-1">
+                  {activeOffer && (
+                     <div className="flex items-center mb-1">
+                       <span className={`inline-block px-2 py-0.5 text-xs font-bold text-white rounded mr-2 ${activeOffer.color || 'bg-blue-500'}`}>{activeOffer.discount}</span>
+                       <span className="text-gray-400 line-through text-sm">₹{Number(selectedRoom ? selectedRoom.price : hotel.pricePerNight).toFixed(2)}</span>
+                     </div>
+                  )}
+                  <div className="flex items-end">
+                    <span className="text-3xl font-bold text-gray-900">
+                      ₹{Number(activeOffer ? calculateDiscountedPrice(selectedRoom ? selectedRoom.price : hotel.pricePerNight, activeOffer.discount) : (selectedRoom ? selectedRoom.price : hotel.pricePerNight)).toFixed(2)}
+                    </span>
+                    <span className="text-gray-500 ml-1 mb-1">/ 24 hrs {selectedRoom ? '' : 'avg'}</span>
+                  </div>
                 </div>
                 {totalPrice > 0 && (
                   <div className="mt-4 bg-green-50 p-3 rounded-xl border border-green-100">
@@ -365,14 +406,72 @@ const HotelDetails = () => {
                 )}
               </div>
               
-              {!selectedRoom && (
+               {!selectedRoom && (
                 <div className="p-4 bg-blue-50 text-blue-800 rounded-xl mb-6 text-sm flex items-start">
                    <BedDouble className="w-5 h-5 mr-2 flex-shrink-0" />
                    <span>Select a room from the available options to start your booking.</span>
                 </div>
               )}
               
-              <div className="space-y-4 mb-6">
+              <div className="space-y-4 mb-6 relative">
+                <div className="relative">
+                  <label className="text-xs font-bold text-gray-900 uppercase block mb-2">Guests</label>
+                  <div 
+                    className="w-full border border-gray-300 rounded-lg py-2.5 px-3 flex items-center justify-between cursor-pointer bg-white focus-within:border-primary"
+                    onClick={() => setIsGuestPopupOpen(!isGuestPopupOpen)}
+                  >
+                    <span className="text-sm text-gray-700 font-medium">{guestsConfig.adults} Adults, {guestsConfig.children} Children</span>
+                    <Users className="w-4 h-4 text-gray-400" />
+                  </div>
+                  {isGuestPopupOpen && (
+                    <div className="absolute top-full left-0 sm:left-auto sm:right-0 mt-2 w-[calc(100vw-80px)] sm:w-72 bg-white rounded-xl shadow-2xl border border-gray-100 p-4 z-50" onClick={(e) => e.stopPropagation()}>
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="font-bold text-gray-900 text-sm">Adults</p>
+                            <p className="text-xs text-gray-500 font-medium">Ages 13 or above</p>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <button 
+                              type="button"
+                              onClick={() => setGuestsConfig(prev => ({...prev, adults: Math.max(1, prev.adults - 1)}))}
+                              className="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:border-gray-800 disabled:opacity-30"
+                              disabled={guestsConfig.adults <= 1}
+                            >-</button>
+                            <span className="w-4 text-center font-bold text-gray-900 text-sm">{guestsConfig.adults}</span>
+                            <button 
+                              type="button"
+                              onClick={() => setGuestsConfig(prev => ({...prev, adults: prev.adults + 1}))}
+                              className="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:border-gray-800"
+                            >+</button>
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center pt-4 border-t border-gray-50">
+                          <div>
+                            <p className="font-bold text-gray-900 text-sm">Children</p>
+                            <p className="text-xs text-gray-500 font-medium">Ages 0-12</p>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <button 
+                              type="button"
+                              onClick={() => setGuestsConfig(prev => ({...prev, children: Math.max(0, prev.children - 1)}))}
+                              className="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:border-gray-800 disabled:opacity-30"
+                              disabled={guestsConfig.children <= 0}
+                            >-</button>
+                            <span className="w-4 text-center font-bold text-gray-900 text-sm">{guestsConfig.children}</span>
+                            <button 
+                              type="button"
+                              onClick={() => setGuestsConfig(prev => ({...prev, children: prev.children + 1}))}
+                              className="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:border-gray-800"
+                            >+</button>
+                          </div>
+                        </div>
+                        <button onClick={() => setIsGuestPopupOpen(false)} className="w-full py-2 mt-2 bg-primary text-white font-bold rounded-lg text-sm hover:bg-blue-700">Done</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <div>
                   <label className="text-xs font-bold text-gray-900 uppercase block mb-2">Check-in Date & Time</label>
                   <DateTimePicker 
@@ -400,7 +499,7 @@ const HotelDetails = () => {
 
               {selectedRoom ? (
                 <button 
-                  onClick={() => navigate(`/user/booking/${hotel._id}?roomId=${selectedRoom._id}&in=${checkIn.toISOString()}&out=${checkOut.toISOString()}`)}
+                  onClick={() => navigate(`/user/booking/${hotel._id}?roomId=${selectedRoom._id}&in=${checkIn.toISOString()}&out=${checkOut.toISOString()}&adults=${guestsConfig.adults}&children=${guestsConfig.children}${offerId ? `&offerId=${offerId}` : ''}`)}
                   disabled={!checkIn || !checkOut || checkIn >= checkOut}
                   className={`w-full font-bold py-3.5 rounded-xl flex items-center justify-center transition-all shadow-md ${!checkIn || !checkOut || checkIn >= checkOut ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-primary text-white hover:bg-blue-700 hover:shadow-lg hover:-translate-y-0.5'}`}
                 >

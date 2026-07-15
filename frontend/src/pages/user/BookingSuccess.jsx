@@ -7,6 +7,7 @@ import html2canvas from 'html2canvas';
 import toast from 'react-hot-toast';
 import Navbar from '../../components/common/Navbar';
 import bookingService from '../../services/bookingService';
+import Loader from '../../components/common/Loader';
 
 const BookingSuccess = () => {
   const { id } = useParams();
@@ -70,11 +71,7 @@ const BookingSuccess = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 pt-24 text-center">
-        <p className="text-gray-600">Loading booking confirmation...</p>
-      </div>
-    );
+    return <Loader text="Loading booking confirmation..." fullScreen={true} />;
   }
 
   if (error || !booking) {
@@ -88,7 +85,7 @@ const BookingSuccess = () => {
     );
   }
 
-  const { hotel, room, user, checkInDate, checkOutDate, totalAmount, guests, _id } = booking;
+  const { hotel, room, user, checkInDate, checkOutDate, totalAmount, guests, _id, offer } = booking;
   const bookingIdStr = `#TRP-${_id.slice(-6).toUpperCase()}`;
 
   return (
@@ -222,10 +219,19 @@ const BookingSuccess = () => {
             <div className="flex justify-between items-center py-3 border-b border-gray-100">
                <div>
                  <p className="font-bold">{room?.title || 'Selected Room'}</p>
-                 <p className="text-sm text-gray-500">Base Fare</p>
+                 <p className="text-sm text-gray-500">Base Fare {offer && '(Discounted)'}</p>
                </div>
                <p className="font-bold">₹{(totalAmount / 1.18).toFixed(2)}</p>
             </div>
+            {offer && (
+              <div className="flex justify-between items-center py-3 border-b border-gray-100 bg-blue-50/50 px-3 rounded-lg mt-2 mb-2">
+                 <div>
+                   <p className="font-bold text-blue-800 text-sm">Offer Applied: {offer.title}</p>
+                   <p className="text-xs font-semibold text-blue-600 mt-0.5">{offer.discount} Discount</p>
+                 </div>
+                 <p className="font-bold text-blue-800 text-xs uppercase tracking-wider bg-blue-100 px-2 py-1 rounded">Applied</p>
+              </div>
+            )}
             <div className="flex justify-between items-center py-3">
                <div>
                  <p className="font-medium text-gray-600">Taxes & Fees (18% GST)</p>

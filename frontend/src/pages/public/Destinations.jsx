@@ -6,12 +6,21 @@ import hotelService from '../../services/hotelService';
 
 const Destinations = () => {
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
   const [regions, setRegions] = useState([
     { name: 'Saurashtra', image: '/images/gir.png', count: '1,245 properties' },
     { name: 'Kutch', image: '/images/kutch.png', count: '3,892 properties' },
     { name: 'Central Gujarat', image: '/images/heritage.png', count: '2,104 properties' },
     { name: 'South Gujarat', image: '/images/room.png', count: '840 properties' },
   ]);
+
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      navigate(`/hotels?search=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      navigate('/hotels');
+    }
+  };
 
   useEffect(() => {
     const fetchDestinations = async () => {
@@ -46,15 +55,19 @@ const Destinations = () => {
             Discover beautiful destinations around the globe and find the perfect place to stay for your next adventure.
           </p>
           
-          <div className="max-w-3xl mx-auto bg-white p-2 rounded-xl flex items-center shadow-lg">
-            <Search className="w-6 h-6 text-gray-400 ml-3" />
+          <div className="max-w-2xl mx-auto bg-white p-2 rounded-full flex items-center shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.2)] transition-shadow duration-300 mt-8">
             <input 
               type="text" 
-              placeholder="Search for a city, region, or country..." 
-              className="w-full py-3 px-4 text-gray-900 outline-none rounded-lg"
+              placeholder="Search destination..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              className="transparent-input flex-1 w-full py-2 sm:py-3 px-6 sm:px-8 text-gray-800 placeholder-gray-300 font-light text-lg sm:text-2xl min-w-0"
             />
-            <button className="bg-primary hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg transition-colors">
-              Search
+            <button 
+              onClick={handleSearch}
+              className="bg-primary hover:bg-blue-700 text-white p-4 sm:p-5 rounded-full transition-transform hover:scale-105 active:scale-95 shrink-0 flex items-center justify-center shadow-md">
+              <Search className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2} />
             </button>
           </div>
         </div>

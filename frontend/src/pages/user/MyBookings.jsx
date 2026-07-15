@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin, Calendar, Search, Filter } from 'lucide-react';
 import bookingService from '../../services/bookingService';
+import Loader from '../../components/common/Loader';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { showConfirm } from '../../utils/toastUtils';
@@ -179,7 +180,7 @@ const MyBookings = () => {
       {/* Bookings List */}
       <div className="space-y-4">
         {isLoading ? (
-          <div className="text-center py-12 text-gray-500">Loading your bookings...</div>
+          <Loader text="Loading your bookings..." fullScreen={false} />
         ) : sortedBookings.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-2xl border border-gray-100">
             <p className="text-gray-500 mb-4">No bookings found in this category.</p>

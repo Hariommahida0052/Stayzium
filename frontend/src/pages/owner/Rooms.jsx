@@ -265,16 +265,18 @@ const OwnerRooms = () => {
 
       {/* Add/Edit Room Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-xl my-8">
-            <div className="flex justify-between items-center mb-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
+          <div className="relative bg-white rounded-2xl max-w-2xl w-full shadow-xl flex flex-col max-h-[90vh] overflow-hidden z-10">
+            <div className="flex justify-between items-center p-5 sm:p-6 border-b border-gray-100 shrink-0 bg-white">
               <h2 className="text-xl font-bold text-gray-900">{isEditMode ? 'Edit Room' : 'Add New Room'}</h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+              <button type="button" onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors p-1">
                 <X className="w-6 h-6" />
               </button>
             </div>
             
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="p-5 sm:p-6 overflow-y-auto flex-1 min-h-0">
+              <form onSubmit={handleSubmit} className="space-y-6">
               {/* Basic Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -480,7 +482,7 @@ const OwnerRooms = () => {
               </div>
 
               {/* Actions */}
-              <div className="pt-4 flex gap-3 border-t border-gray-100">
+              <div className="pt-5 flex gap-3 border-t border-gray-100 mt-2">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors">
                   Cancel
                 </button>
@@ -489,6 +491,7 @@ const OwnerRooms = () => {
                 </button>
               </div>
             </form>
+            </div>
           </div>
         </div>
       )}

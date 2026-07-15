@@ -37,6 +37,13 @@
     --tw-ring-color: rgba(41, 98, 255, 0.15) !important;
     box-shadow: 0 0 0 4px rgba(41, 98, 255, 0.15) !important;
   }
+  
+  .transparent-input,
+  .transparent-input:focus {
+    border: none !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+  }
      
   /* Reset for checkbox and radio to prevent them from becoming giant blocks */
   input[type="checkbox"],

@@ -97,15 +97,19 @@ function SquareGrid({
 
 const Loader = ({ text = "Loading...", fullScreen = true }) => {
   const content = (
-    <div className="flex flex-col items-center justify-center space-y-6">
-      <SquareGrid className="text-[#2563eb]" size={5} />
+    <div className="flex flex-col items-center justify-center space-y-8">
+      <div className="flex items-center gap-8">
+        <SquareGrid className="text-[#2563eb]" size={5} />
+        <SquareGrid className="text-[#16a34a]" size={5} />
+        <SquareGrid className="text-[#e11d48]" size={5} />
+      </div>
       {text && <p className="text-gray-600 font-medium animate-pulse tracking-wide">{text}</p>}
     </div>
   );
 
   if (fullScreen) {
     return (
-      <div className="min-h-[80vh] flex items-center justify-center w-full bg-gray-50">
+      <div className="fixed inset-0 flex items-center justify-center bg-gray-50 z-50">
         {content}
       </div>
     );

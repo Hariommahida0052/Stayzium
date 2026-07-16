@@ -629,7 +629,7 @@ const Home = () => {
               <ul className="space-y-4 text-white-sm">
                 <li className="flex items-start">
                   <MapPin className="w-15 h-5 mr-3 text-gray-500 mt-0.5" />
-                  <span className="text-gray-400 flex items-center gap-2 font-medium">123 Travel Avenue, New York, NY 10001, United States</span>
+                  <span className="text-gray-400 flex items-center gap-2 font-medium">Stayzium India HQ,SG Highway, Ahmedabad, Gujarat, India 380015</span>
                 </li>
                 <li className="flex items-center">
                   <Clock className="w-5 h-5 mr-3 text-gray-500" />

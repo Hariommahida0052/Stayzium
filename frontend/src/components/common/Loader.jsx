@@ -83,7 +83,7 @@ function SquareGrid({
             style={{
               animation: "loading-ui-square-grid var(--duration, 2.8s) linear infinite",
               animationDelay: `calc(var(--delay, 0.06s) * ${index})`,
-              backgroundColor: "var(--mask-color, var(--background, white))",
+              backgroundColor: "var(--mask-color, #f9fafb)",
             }}
           >
             {glyph}
@@ -105,7 +105,7 @@ const Loader = ({ text = "Loading...", fullScreen = true }) => {
 
   if (fullScreen) {
     return (
-      <div className="min-h-[80vh] flex items-center justify-center w-full bg-gray-50/50">
+      <div className="min-h-[80vh] flex items-center justify-center w-full bg-gray-50">
         {content}
       </div>
     );
